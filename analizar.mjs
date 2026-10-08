@@ -130,6 +130,7 @@ const pagina = generarPagina(datos);
 fs.writeFileSync("00 Señales.html", pagina);
 fs.mkdirSync("publico", { recursive: true });
 fs.writeFileSync("publico/index.html", pagina); // lo que publica GitHub Pages
+fs.copyFileSync("src/guia.html", "publico/guia.html");
 
 const cuenta = (e) => senales.filter((s) => s.estado === e && s.probada).length;
 console.log(`Listo: ${activos.length} activos, CCL ${cclHoy.toFixed(0)}.`);

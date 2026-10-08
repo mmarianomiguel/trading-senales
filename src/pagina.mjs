@@ -61,6 +61,8 @@ input[type=text] { font: inherit; padding: 8px 10px; border: 1px solid var(--bor
 .b-cerca { background: var(--aviso); color: var(--txt); }
 .b-posible-venta { background: var(--rojo-bg); color: var(--rojo); outline: 1.5px dashed var(--rojo); }
 .vivo { margin-top: 4px; color: var(--verde); }
+.guia { display: block; margin: 10px 0 2px; padding: 10px 14px; border-radius: 10px; background: var(--azul-bg); color: var(--azul); font-weight: 600; text-decoration: none; }
+.datos a { color: inherit; }
 .datos { display: grid; grid-template-columns: auto 1fr; gap: 3px 12px; font-size: 14px; }
 .datos span:nth-child(odd) { color: var(--sub); }
 .pos { color: var(--verde); } .neg { color: var(--rojo); }
@@ -81,6 +83,7 @@ ol li, ul li { margin-bottom: 6px; }
 <body>
 <main>
   <h1>Señales de trading</h1>
+  <a class="guia" href="guia.html">¿Primera vez? Leé la guía: qué es el stop, qué hacer con cada cartel, paso a paso →</a>
   <div class="sub" id="cabecera"></div>
   <div class="sub vivo" id="vivo-estado"></div>
 
@@ -111,6 +114,7 @@ ol li, ul li { margin-bottom: 6px; }
   <h2>Cómo usarlo</h2>
   <div class="panel">
     <ol>
+      <li>Explicación completa para principiantes: <a href="guia.html">la guía</a>.</li>
       <li><b>COMPRAR</b>: al día siguiente, en la apertura, comprar más o menos el monto que dice. En ese momento poner la orden de <b>stop</b> en el broker (vende sola si baja a ese precio).</li>
       <li><b>MANTENER</b>: la regla sigue comprada. No hacer nada; respetar el stop.</li>
       <li><b>VENDER</b>: si se compró por esa señal, vender al día siguiente en la apertura.</li>
@@ -279,7 +283,7 @@ function tarjeta(s, vi) {
       ? "<b class=neg>No comprar:</b> ya bajó hasta el stop antes de entrar."
       : "Comprar en la apertura del día siguiente a la señal (cerró en <b>" + plata(a.precio, a.moneda) + "</b>)") + "</span>";
     filas += lineaAhora(a);
-    filas += "<span>Stop</span><span class=neg>" + plata(stop, a.moneda) + " (" + pct(-s.stopPct) + ")</span>";
+    filas += "<span><a href='guia.html#stop'>Stop</a></span><span class=neg>" + plata(stop, a.moneda) + " (" + pct(-s.stopPct) + ")</span>";
     filas += "<span>Objetivo</span><span>" + (s.objetivoPct ? '<span class="pos">' + plata(a.precio * (1 + s.objetivoPct), a.moneda) + " (" + pct(s.objetivoPct) + ")</span>" : esc(e.salidaTexto)) + "</span>";
     if (!vi.noComprar) filas += cuanto(a, s, s.stopPct, s.objetivoPct);
   } else if (s.estado === "nada") {
@@ -289,7 +293,7 @@ function tarjeta(s, vi) {
       ? "Si el próximo cierre queda arriba de <b>" + plata(g.local, a.moneda) + "</b>, se confirma la compra y se compra en la apertura siguiente. <b>Ahora está arriba.</b>"
       : "Le falta <b>" + pct(g.local / p - 1, false) + "</b> para dar compra: tiene que cerrar arriba de <b>" + plata(g.local, a.moneda) + "</b>. Todavía no comprar.") + "</span>";
     filas += lineaAhora(a);
-    filas += "<span>Stop</span><span class=neg>≈ " + plata(stop, a.moneda) + " (" + pct(-g.stopPct) + ")</span>";
+    filas += "<span><a href='guia.html#stop'>Stop</a></span><span class=neg>≈ " + plata(stop, a.moneda) + " (" + pct(-g.stopPct) + ")</span>";
     filas += "<span>Objetivo</span><span>" + (e.id === "rebote" ? '<span class="pos">≈ ' + plata(p * (1 + 2 * g.stopPct), a.moneda) + " (" + pct(2 * g.stopPct) + ")</span>" : esc(e.salidaTexto)) + "</span>";
     filas += cuanto(a, s, g.stopPct, e.id === "rebote" ? 2 * g.stopPct : null);
   } else {
@@ -302,7 +306,7 @@ function tarjeta(s, vi) {
       if (vi.vivo === "objetivo") filas += "<span>Qué hacer</span><span><b class=pos>Llegó al objetivo:</b> si lo tenés, vender y tomar la ganancia.</span>";
       if (vi.vivo === "venta") filas += "<span>Qué hacer</span><span>Si el próximo cierre queda " + (vi.g.dir === "abajo" ? "abajo" : "arriba") + " de <b>" + plata(vi.g.local, a.moneda) + "</b>, la regla dice vender. <b>Ahora está " + (vi.g.dir === "abajo" ? "abajo" : "arriba") + ".</b></span>";
       filas += "<span>" + (VIVO[a.ticker] ? "Ahora" : "Hoy") + "</span><span>" + plata(p, a.moneda) + ' <b class="' + clase(res) + '">' + pct(res) + "</b> desde la compra</span>";
-      filas += "<span>Stop</span><span class=neg>" + plata(stop, a.moneda) + "</span>";
+      filas += "<span><a href='guia.html#stop'>Stop</a></span><span class=neg>" + plata(stop, a.moneda) + "</span>";
       filas += "<span>Salida</span><span>" + (s.objetivoPct ? "Objetivo " + plata(s.entradaPrecio * (1 + s.objetivoPct), a.moneda) : esc(e.salidaTexto)) +
         (vi.g && !vi.vivo ? " Hoy sería con un cierre " + (vi.g.dir === "abajo" ? "abajo" : "arriba") + " de " + plata(vi.g.local, a.moneda) + "." : "") + "</span>";
       filas += "<span></span><span class=sub>Si no lo compraste en esa fecha, no entres ahora: esperá una señal nueva de COMPRAR.</span>";
