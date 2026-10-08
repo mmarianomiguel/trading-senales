@@ -79,6 +79,8 @@ function estadisticas(trades, x, n) {
     n: r.length,
     aciertos: r.length ? ganan.length / r.length : 0,
     promedio: r.length ? r.reduce((a, b) => a + b, 0) / r.length : 0,
+    promGanadora: ganan.length ? sumG / ganan.length : 0,
+    promPerdedora: pierden.length ? -sumP / pierden.length : 0,
     pf: sumP > 0 ? sumG / sumP : sumG > 0 ? 99 : 0,
     total: eq - 1,
     maxDD,

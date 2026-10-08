@@ -1,7 +1,8 @@
 name: Señales del día
 on:
   schedule:
-    - cron: "30 21 * * *"   # 18:30 hora de Argentina, todos los días (cripto no cierra)
+    - cron: "30 21 * * *"   # 18:30 hora de Argentina: cierre de las bolsas
+    - cron: "15 0 * * *"    # 21:15 hora de Argentina: cierre del día de las cripto (UTC)
   workflow_dispatch:
   push:
     branches: [main]

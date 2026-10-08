@@ -26,6 +26,7 @@ export function rsi(c, n = 14) {
     }
     out[i] = p === 0 ? 100 : 100 - 100 / (1 + g / p);
   }
+  out.g = g; out.p = p; // promedios al último día (para calcular el RSI de mañana)
   return out;
 }
 

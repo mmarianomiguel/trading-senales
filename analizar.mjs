@@ -8,10 +8,19 @@ import { calcular, sma } from "./src/indicadores.mjs";
 import { ESTRATEGIAS } from "./src/estrategias.mjs";
 import { simular, INICIO } from "./src/backtest.mjs";
 import { generarPagina } from "./src/pagina.mjs";
+import { gatillo } from "./src/gatillos.mjs";
 
 process.chdir(path.dirname(fileURLToPath(import.meta.url)));
 const cfg = JSON.parse(fs.readFileSync("config.json", "utf8"));
 const DIA = 864e5;
+
+// De dónde saca la página el precio en vivo: Binance (cripto) o data912 (Argentina, CEDEARs, EE.UU.)
+function fuenteEnVivo(a) {
+  if (a.mercado === "cripto") return { fuente: "binance", simbolo: a.ticker.replace("-USD", "USDT") };
+  if (a.mercado === "argentina") return { fuente: "arg_stocks", simbolo: a.ticker.replace(".BA", "") };
+  if (a.mercado === "cedear") return { fuente: "arg_cedears", simbolo: a.ticker.replace(".BA", "") };
+  return { fuente: "usa_stocks", simbolo: a.ticker };
+}
 const dias = (a, b) => Math.round((new Date(b) - new Date(a)) / DIA);
 
 // 1. Bajar precios (GGAL en Nueva York hace falta para el dólar CCL)
@@ -51,7 +60,7 @@ for (const a of cfg.activos) {
   const N = 130;
   activos.push({
     ticker: a.ticker, nombre: a.nombre, mercado: a.mercado, moneda: s.moneda,
-    precio, fecha: orig.at(-1).fecha,
+    precio, fecha: orig.at(-1).fecha, vivo: fuenteEnVivo(a),
     grafico: { f: orig.slice(-N).map((v) => v.fecha), c: cOrig.slice(-N), m50: m50.slice(-N) },
   });
 
@@ -65,6 +74,7 @@ for (const a of cfg.activos) {
 
     const sen = {
       ticker: a.ticker, estrategia: est.id, estado: hoy.estado, motivo: hoy.motivo ?? null, probada, stats,
+      gatillo: gatillo(x, est, hoy, cfg),
       ultimas: trades.slice(-5).reverse().map((t) => ({
         desde: fechas[t.iEnt], hasta: fechas[t.iSal], r: t.r, motivo: t.motivo,
       })),
@@ -82,6 +92,13 @@ for (const a of cfg.activos) {
     }
     senales.push(sen);
   }
+}
+
+// Los ETF de EE.UU. no están en data912: el precio en vivo se estima con su CEDEAR
+for (const a of activos) {
+  if (a.mercado !== "eeuu") continue;
+  const ced = activos.find((b) => b.ticker === a.ticker + ".BA");
+  if (ced) a.vivo.factorCedear = a.precio / ced.precio;
 }
 
 // 3. Cómo le fue a cada regla sumando todos los activos

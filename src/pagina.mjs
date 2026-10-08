@@ -57,6 +57,10 @@ input[type=text] { font: inherit; padding: 8px 10px; border: 1px solid var(--bor
 .b-comprar { background: var(--verde-bg); color: var(--verde); }
 .b-vender { background: var(--rojo-bg); color: var(--rojo); }
 .b-mantener { background: var(--azul-bg); color: var(--azul); }
+.b-posible { background: var(--verde-bg); color: var(--verde); outline: 1.5px dashed var(--verde); }
+.b-cerca { background: var(--aviso); color: var(--txt); }
+.b-posible-venta { background: var(--rojo-bg); color: var(--rojo); outline: 1.5px dashed var(--rojo); }
+.vivo { margin-top: 4px; color: var(--verde); }
 .datos { display: grid; grid-template-columns: auto 1fr; gap: 3px 12px; font-size: 14px; }
 .datos span:nth-child(odd) { color: var(--sub); }
 .pos { color: var(--verde); } .neg { color: var(--rojo); }
@@ -78,6 +82,7 @@ ol li, ul li { margin-bottom: 6px; }
 <main>
   <h1>Señales de trading</h1>
   <div class="sub" id="cabecera"></div>
+  <div class="sub vivo" id="vivo-estado"></div>
 
   <div class="aviso"><b>Esto es una ayuda, no un consejo de inversión.</b> Las reglas se probaron con la historia de cada activo, pero lo que funcionó antes puede no funcionar ahora. El primer mes conviene seguirlas en papel, sin plata, y nunca poner plata que se necesite.</div>
 
@@ -136,7 +141,7 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;",
 const pct = (v, signo = true) => (signo && v > 0 ? "+" : "") + (v * 100).toLocaleString("es-AR", { maximumFractionDigits: 1 }) + "%";
 const clase = v => v > 0 ? "pos" : v < 0 ? "neg" : "";
 const dec = v => v >= 1000 ? 0 : v >= 10 ? 2 : v >= 1 ? 3 : 4;
-const plata = (v, moneda) => (moneda === "ARS" ? "$ " : "US$ ") + v.toLocaleString("es-AR", { minimumFractionDigits: 0, maximumFractionDigits: dec(Math.abs(v)) });
+const plata = (v, moneda) => (moneda === "ARS" ? "$ " : "US$ ") + v.toLocaleString("es-AR", { minimumFractionDigits: 0, maximumFractionDigits: dec(Math.abs(v)) });
 const fecha = s => s.split("-").reverse().join("/");
 const numero = s => Number(String(s).replace(/\\./g, "").replace(",", ".")) || 0;
 
@@ -165,15 +170,81 @@ for (const el of document.querySelectorAll(".seg")) {
 }
 document.getElementById("debiles").onchange = e => { f.debiles = e.target.checked; pintar(); };
 
-function cuanto(a, stopPct) {
-  const capArs = numero(capIn.value), r = numero(rieIn.value) / 100;
-  if (!capArs || !r) return "";
-  const cap = a.moneda === "ARS" ? capArs : capArs / D.ccl;
+// ---- Precios en vivo: Binance (cripto) y data912 (Argentina, CEDEARs, EE.UU.), cada 1 minuto ----
+// Las señales se confirman con el precio de CIERRE; el precio en vivo solo avisa qué está por pasar.
+const VIVO = {};
+let cclVivo = null, horaVivo = null;
+async function traerVivo() {
+  const pedir = u => fetch(u).then(r => r.ok ? r.json() : []).catch(() => []);
+  const cripto = D.activos.filter(a => a.vivo.fuente === "binance").map(a => a.vivo.simbolo);
+  const [bin, arg, ced, usa, adr] = await Promise.all([
+    pedir("https://api.binance.com/api/v3/ticker/24hr?symbols=" + encodeURIComponent(JSON.stringify(cripto))),
+    pedir("https://data912.com/live/arg_stocks"),
+    pedir("https://data912.com/live/arg_cedears"),
+    pedir("https://data912.com/live/usa_stocks"),
+    pedir("https://data912.com/live/usa_adrs"),
+  ]);
+  const M = { binance: new Map((Array.isArray(bin) ? bin : []).map(x => [x.symbol, { p: +x.lastPrice, var: +x.priceChangePercent / 100 }])) };
+  for (const [k, arr] of [["arg_stocks", arg], ["arg_cedears", ced], ["usa_stocks", usa]])
+    M[k] = new Map(arr.filter(x => x.c > 0).map(x => [x.symbol, { p: x.c, var: (x.pct_change || 0) / 100 }]));
+  const gg = M.arg_stocks.get("GGAL"), ggAdr = adr.find(x => x.symbol === "GGAL");
+  if (gg && ggAdr && ggAdr.c > 0) cclVivo = gg.p * 10 / ggAdr.c;
+  for (const a of D.activos) {
+    let v = M[a.vivo.fuente] && M[a.vivo.fuente].get(a.vivo.simbolo);
+    if (!v && a.vivo.factorCedear) {
+      const c = M.arg_cedears.get(a.vivo.simbolo);
+      if (c) v = { p: c.p * a.vivo.factorCedear, var: c.var, aprox: true };
+    }
+    if (v && v.p > 0) VIVO[a.ticker] = v;
+  }
+  if (Object.keys(VIVO).length) horaVivo = new Date();
+  pintar();
+}
+
+const cclAhora = () => cclVivo || D.ccl;
+const precioAhora = a => VIVO[a.ticker] ? VIVO[a.ticker].p : a.precio;
+const aPesos = (a, v) => a.moneda === "ARS" ? v : v * cclAhora();
+const enMoneda = (a, usd) => a.moneda === "ARS" ? usd * cclAhora() : usd; // gatillos vienen en dólares (CCL para lo argentino)
+
+// Qué mostrar de cada regla teniendo en cuenta el precio en vivo
+function vista(s) {
+  const a = ACT[s.ticker], v = VIVO[s.ticker], p = precioAhora(a);
+  const g = s.gatillo ? Object.assign({}, s.gatillo, { local: enMoneda(a, s.gatillo.precio) }) : null;
+  if (s.estado === "comprar") {
+    if (v && p <= a.precio * (1 - s.stopPct)) return { grupo: "comprar", badge: "NO COMPRAR", cls: "vender", noComprar: true };
+    return { grupo: "comprar", badge: "COMPRAR", cls: "comprar" };
+  }
+  if (s.estado === "vender") return { grupo: "vender", badge: "VENDER", cls: "vender" };
+  if (s.estado === "mantener") {
+    const stop = s.entradaPrecio * (1 - s.stopPct);
+    if (v && p <= stop) return { grupo: "vender", badge: "VENDER YA", cls: "vender", vivo: "stop" };
+    if (v && s.objetivoPct && p >= s.entradaPrecio * (1 + s.objetivoPct)) return { grupo: "vender", badge: "OBJETIVO", cls: "vender", vivo: "objetivo" };
+    if (v && g && (g.dir === "abajo" ? p < g.local : p > g.local)) return { grupo: "vender", badge: "POSIBLE VENTA", cls: "posible-venta", vivo: "venta", g };
+    return { grupo: "mantener", badge: "MANTENER", cls: "mantener", g };
+  }
+  if (s.estado === "nada" && v && g && g.tipo === "compra") {
+    if (p > g.local) return { grupo: "comprar", badge: "POSIBLE COMPRA", cls: "posible", vivo: "compra", g };
+    if (p > g.local * 0.97) return { grupo: "comprar", badge: "CERCA", cls: "cerca", vivo: "cerca", g };
+  }
+  return null;
+}
+
+// Cuánto comprar (en pesos) para que, si toca el stop, se pierda solo el riesgo elegido; y qué puede dejar
+function cuanto(a, s, stopPct, objetivoPct) {
+  const cap = numero(capIn.value), r = numero(rieIn.value) / 100;
+  if (!cap || !r) return "<span>Cuánto comprar</span><span class=sub>Poné tu capital arriba y te lo calcula.</span>";
   const monto = Math.min(cap, cap * r / stopPct);
-  const u = monto / a.precio;
-  const unidades = a.mercado === "cripto" ? u.toLocaleString("es-AR", { maximumFractionDigits: 5 }) : Math.floor(u).toLocaleString("es-AR");
-  return "<span>Cuánto comprar</span><span><b>" + plata(monto, a.moneda) + "</b> (" + unidades + (a.mercado === "cripto" ? "" : " u.") +
-    ") · si toca el stop perdés " + plata(monto * stopPct, a.moneda) + "</span>";
+  const u = monto / aPesos(a, precioAhora(a));
+  const unidades = a.mercado === "cripto" ? u.toLocaleString("es-AR", { maximumFractionDigits: 5 }) : Math.floor(u).toLocaleString("es-AR") + " u.";
+  const st = s.stats;
+  let h = "<span>Cuánto comprar</span><span><b>" + plata(monto, "ARS") + "</b>" + (a.moneda === "ARS" ? "" : " (≈ " + plata(monto / cclAhora(), "USD") + ")") + " · " + unidades + "</span>";
+  h += "<span>Si sale bien</span><span class=pos>" + (objetivoPct
+    ? "llega al objetivo: <b>+" + plata(monto * objetivoPct, "ARS") + "</b>"
+    : "las que ganaron dejaron " + pct(st.promGanadora) + " en promedio: <b>+" + plata(monto * st.promGanadora, "ARS") + "</b>") + "</span>";
+  h += "<span>Si sale mal</span><span class=neg>toca el stop: <b>−" + plata(monto * stopPct, "ARS") + "</b></span>";
+  h += "<span>En promedio</span><span>contando las que ganan y las que pierden, esta regla dejó <b class='" + clase(st.promedio) + "'>" +
+    (st.promedio >= 0 ? "+" : "−") + plata(Math.abs(monto * st.promedio), "ARS") + "</b> por operación</span>";
+  return h;
 }
 
 function grafico(a, stop, entrada) {
@@ -192,28 +263,53 @@ function grafico(a, stop, entrada) {
   return s + "</svg>";
 }
 
-function tarjeta(s) {
-  const a = ACT[s.ticker], e = EST[s.estrategia], st = s.stats;
+function lineaAhora(a) {
+  const v = VIVO[a.ticker];
+  if (!v) return "";
+  return "<span>Ahora</span><span><b>" + plata(v.p, a.moneda) + "</b> <span class='" + clase(v.var) + "'>" + pct(v.var) + " hoy</span>" +
+    (v.aprox ? " <span class=sub>(aprox., sacado del CEDEAR)</span>" : "") + "</span>";
+}
+
+function tarjeta(s, vi) {
+  const a = ACT[s.ticker], e = EST[s.estrategia], st = s.stats, p = precioAhora(a);
   let filas = "", stop = null, entrada = null;
   if (s.estado === "comprar") {
     stop = a.precio * (1 - s.stopPct);
-    filas += "<span>Qué hacer</span><span>Comprar mañana en la apertura (hoy cerró en <b>" + plata(a.precio, a.moneda) + "</b>)</span>";
+    filas += "<span>Qué hacer</span><span>" + (vi.noComprar
+      ? "<b class=neg>No comprar:</b> ya bajó hasta el stop antes de entrar."
+      : "Comprar en la apertura del día siguiente a la señal (cerró en <b>" + plata(a.precio, a.moneda) + "</b>)") + "</span>";
+    filas += lineaAhora(a);
     filas += "<span>Stop</span><span class=neg>" + plata(stop, a.moneda) + " (" + pct(-s.stopPct) + ")</span>";
     filas += "<span>Objetivo</span><span>" + (s.objetivoPct ? '<span class="pos">' + plata(a.precio * (1 + s.objetivoPct), a.moneda) + " (" + pct(s.objetivoPct) + ")</span>" : esc(e.salidaTexto)) + "</span>";
-    filas += cuanto(a, s.stopPct);
+    if (!vi.noComprar) filas += cuanto(a, s, s.stopPct, s.objetivoPct);
+  } else if (s.estado === "nada") {
+    const g = vi.g;
+    stop = p * (1 - g.stopPct);
+    filas += "<span>Qué hacer</span><span>" + (vi.vivo === "compra"
+      ? "Si el próximo cierre queda arriba de <b>" + plata(g.local, a.moneda) + "</b>, se confirma la compra y se compra en la apertura siguiente. <b>Ahora está arriba.</b>"
+      : "Le falta <b>" + pct(g.local / p - 1, false) + "</b> para dar compra: tiene que cerrar arriba de <b>" + plata(g.local, a.moneda) + "</b>. Todavía no comprar.") + "</span>";
+    filas += lineaAhora(a);
+    filas += "<span>Stop</span><span class=neg>≈ " + plata(stop, a.moneda) + " (" + pct(-g.stopPct) + ")</span>";
+    filas += "<span>Objetivo</span><span>" + (e.id === "rebote" ? '<span class="pos">≈ ' + plata(p * (1 + 2 * g.stopPct), a.moneda) + " (" + pct(2 * g.stopPct) + ")</span>" : esc(e.salidaTexto)) + "</span>";
+    filas += cuanto(a, s, g.stopPct, e.id === "rebote" ? 2 * g.stopPct : null);
   } else {
     entrada = { fecha: s.entradaFecha, precio: s.entradaPrecio };
     stop = s.entradaPrecio * (1 - s.stopPct);
     filas += "<span>Compra</span><span>" + fecha(s.entradaFecha) + " a " + plata(s.entradaPrecio, a.moneda) + "</span>";
     if (s.estado === "mantener") {
-      filas += "<span>Hoy</span><span>" + plata(a.precio, a.moneda) + ' <b class="' + clase(s.resultado) + '">' + pct(s.resultado) + "</b></span>";
+      const res = p / s.entradaPrecio - 1;
+      if (vi.vivo === "stop") filas += "<span>Qué hacer</span><span><b class=neg>Bajó al stop:</b> si lo tenés, vender (si estaba la orden de stop puesta, ya se vendió).</span>";
+      if (vi.vivo === "objetivo") filas += "<span>Qué hacer</span><span><b class=pos>Llegó al objetivo:</b> si lo tenés, vender y tomar la ganancia.</span>";
+      if (vi.vivo === "venta") filas += "<span>Qué hacer</span><span>Si el próximo cierre queda " + (vi.g.dir === "abajo" ? "abajo" : "arriba") + " de <b>" + plata(vi.g.local, a.moneda) + "</b>, la regla dice vender. <b>Ahora está " + (vi.g.dir === "abajo" ? "abajo" : "arriba") + ".</b></span>";
+      filas += "<span>" + (VIVO[a.ticker] ? "Ahora" : "Hoy") + "</span><span>" + plata(p, a.moneda) + ' <b class="' + clase(res) + '">' + pct(res) + "</b> desde la compra</span>";
       filas += "<span>Stop</span><span class=neg>" + plata(stop, a.moneda) + "</span>";
-      filas += "<span>Salida</span><span>" + (s.objetivoPct ? "Objetivo " + plata(s.entradaPrecio * (1 + s.objetivoPct), a.moneda) : esc(e.salidaTexto)) + "</span>";
+      filas += "<span>Salida</span><span>" + (s.objetivoPct ? "Objetivo " + plata(s.entradaPrecio * (1 + s.objetivoPct), a.moneda) : esc(e.salidaTexto)) +
+        (vi.g && !vi.vivo ? " Hoy sería con un cierre " + (vi.g.dir === "abajo" ? "abajo" : "arriba") + " de " + plata(vi.g.local, a.moneda) + "." : "") + "</span>";
       filas += "<span></span><span class=sub>Si no lo compraste en esa fecha, no entres ahora: esperá una señal nueva de COMPRAR.</span>";
     } else {
-      const txt = s.motivo === "regla" ? "La regla dice salir: vender mañana en la apertura." :
-        s.motivo === "stop" ? "Tocó el stop hoy. Si estaba la orden puesta, ya se vendió." :
-        "Llegó al objetivo hoy. Si estaba la orden puesta, ya se vendió.";
+      const txt = s.motivo === "regla" ? "La regla dice salir: vender en la apertura." :
+        s.motivo === "stop" ? "Tocó el stop. Si estaba la orden puesta, ya se vendió." :
+        "Llegó al objetivo. Si estaba la orden puesta, ya se vendió.";
       filas += "<span>Qué hacer</span><span>" + txt + "</span>";
       filas += "<span>Resultado</span><span class='" + clase(s.resultado) + "'><b>" + pct(s.resultado) + "</b> desde la compra</span>";
     }
@@ -221,7 +317,7 @@ function tarjeta(s) {
   const ult = s.ultimas.map(t => "<tr><td>" + fecha(t.desde) + "</td><td>" + fecha(t.hasta) + '</td><td class="' + clase(t.r) + '">' + pct(t.r) + "</td><td>" + ({ regla: "regla", stop: "stop", objetivo: "objetivo" })[t.motivo] + "</td></tr>").join("");
   return '<div class="card' + (s.probada ? "" : " debil") + '">' +
     '<div class="cab"><div><b>' + esc(a.nombre) + '</b><div><span class="chip">' + esc(a.ticker) + '</span><span class="chip">' + MERCADOS[a.mercado] + '</span><span class="chip">' + esc(e.nombre) + " · " + e.plazo + "</span></div></div>" +
-    '<span class="badge b-' + s.estado + '">' + s.estado.toUpperCase() + "</span></div>" +
+    '<span class="badge b-' + vi.cls + '">' + vi.badge + "</span></div>" +
     grafico(a, stop, entrada) +
     '<div class="datos">' + filas + "</div>" +
     '<div class="hist">' + (s.probada ? "" : "<b>⚠ Regla floja en este activo.</b> ") +
@@ -234,31 +330,34 @@ function tarjeta(s) {
 }
 
 const ORDEN = { comprar: 0, vender: 1, mantener: 2 };
+const ORDEN_BADGE = { "COMPRAR": 0, "POSIBLE COMPRA": 1, "CERCA": 2, "NO COMPRAR": 3, "VENDER YA": 0, "OBJETIVO": 1, "VENDER": 2, "POSIBLE VENTA": 3, "MANTENER": 0 };
 function explicarCapital() {
   const cap = numero(capIn.value), r = numero(rieIn.value) / 100;
   const el = document.getElementById("explica-capital");
   if (!cap || !r) {
-    el.innerHTML = "Poné con cuánta plata operás y cuánto aceptás perder por operación. Con eso, cada señal de <b>COMPRAR</b> te dice cuánto comprar.";
+    el.innerHTML = "Poné con cuánta plata operás y cuánto aceptás perder por operación. Con eso, cada señal de <b>COMPRAR</b> te dice cuánto comprar y cuánto puede ganar o perder.";
     return;
   }
-  const hayCompras = D.senales.some(s => s.estado === "comprar" && s.probada);
   el.innerHTML = "Con " + plata(cap, "ARS") + " y " + rieIn.value + "%, si una compra sale mal y toca el stop perdés como mucho <b>" + plata(cap * r, "ARS") +
-    "</b>. Por eso cada señal de <b>COMPRAR</b> te va a decir cuánto comprar (puede ser menos que todo tu capital)." +
-    (hayCompras ? "" : " Hoy no hay señales de compra, así que no hay nada que calcular todavía.") +
+    "</b>. Cada señal de <b>COMPRAR</b> te dice cuánto comprar y cuánto puede dejar si sale bien (puede ser menos que todo tu capital)." +
     (r > 0.02 ? ' <b class="neg">Más de 2% por operación es mucho para empezar: con unas pocas seguidas que salgan mal perdés una buena parte.</b>' : "");
 }
 
 function pintar() {
   explicarCapital();
+  document.getElementById("vivo-estado").innerHTML = horaVivo
+    ? "● Precios en vivo, actualizados a las " + horaVivo.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit", hour12: false }) + " h" + " (se refrescan solos cada minuto). Las señales se confirman con el precio de cierre."
+    : "Buscando precios en vivo…";
   for (const el of document.querySelectorAll(".seg")) for (const b of el.children) b.classList.toggle("on", b.dataset.v === f[el.dataset.f]);
   const lista = D.senales
-    .filter(s => s.estado !== "nada")
-    .filter(s => f.debiles || s.probada)
-    .filter(s => f.estado === "todas" || s.estado === f.estado)
-    .filter(s => f.mercado === "todos" || ACT[s.ticker].mercado === f.mercado)
-    .filter(s => f.plazo === "todos" || EST[s.estrategia].plazo === f.plazo)
-    .sort((a, b) => ORDEN[a.estado] - ORDEN[b.estado] || b.stats.pf - a.stats.pf);
-  document.getElementById("lista").innerHTML = lista.length ? lista.map(tarjeta).join("") :
+    .map(s => ({ s, vi: vista(s) }))
+    .filter(x => x.vi)
+    .filter(x => f.debiles || x.s.probada)
+    .filter(x => f.estado === "todas" || x.vi.grupo === f.estado)
+    .filter(x => f.mercado === "todos" || ACT[x.s.ticker].mercado === f.mercado)
+    .filter(x => f.plazo === "todos" || EST[x.s.estrategia].plazo === f.plazo)
+    .sort((a, b) => ORDEN[a.vi.grupo] - ORDEN[b.vi.grupo] || ORDEN_BADGE[a.vi.badge] - ORDEN_BADGE[b.vi.badge] || b.s.stats.pf - a.s.stats.pf);
+  document.getElementById("lista").innerHTML = lista.length ? lista.map(x => tarjeta(x.s, x.vi)).join("") :
     '<div class="vacio">No hay señales con estos filtros. Es normal: las reglas dan pocas señales y esperar también es una decisión.</div>';
 }
 
@@ -269,6 +368,8 @@ document.getElementById("reglas").innerHTML =
 
 if (D.errores.length) document.getElementById("errores").textContent = "Avisos: " + D.errores.join(" · ");
 pintar();
+traerVivo();
+setInterval(traerVivo, 60000);
 </script>
 </body>
 </html>`;
