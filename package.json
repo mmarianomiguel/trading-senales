@@ -1,0 +1,6 @@
+{
+  "name": "trading-senales",
+  "private": true,
+  "type": "module",
+  "scripts": { "analizar": "node analizar.mjs" }
+}
