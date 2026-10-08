@@ -1,0 +1,43 @@
+name: Señales del día
+on:
+  schedule:
+    - cron: "30 21 * * *"   # 18:30 hora de Argentina, todos los días (cripto no cierra)
+  workflow_dispatch:
+  push:
+    branches: [main]
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: false
+jobs:
+  publicar:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: node analizar.mjs
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: publico
+      - id: deploy
+        uses: actions/deploy-pages@v4
+      # GitHub apaga las tareas programadas de un repo sin commits en 60 días: cada 45 días deja uno vacío
+      - name: Mantener viva la tarea diaria
+        if: github.event_name == 'schedule'
+        run: |
+          ultimo=$(git log -1 --format=%ct)
+          if [ $(( $(date +%s) - ultimo )) -gt $(( 45 * 86400 )) ]; then
+            git config user.name "mmarianomiguel"
+            git config user.email "marianomigu3l@gmail.com"
+            git commit --allow-empty -m "Mantener viva la tarea diaria"
+            git push
+          fi

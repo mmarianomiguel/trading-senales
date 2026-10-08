@@ -13,6 +13,9 @@ const PLANTILLA = `<!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Señales de trading</title>
+<meta name="robots" content="noindex">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Señales">
 <style>
 :root {
   --bg: #f6f7f9; --card: #fff; --txt: #1b1f24; --sub: #5f6b7a; --borde: #e3e7ec;
