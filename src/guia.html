@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
 <title>Guía de señales</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 :root {
   --bg: #f6f7f9; --card: #fff; --txt: #1b1f24; --sub: #5f6b7a; --borde: #e3e7ec;
@@ -19,7 +22,7 @@
   }
 }
 * { box-sizing: border-box; }
-body { margin: 0; background: var(--bg); color: var(--txt); font: 16px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif; }
+body { margin: 0; background: var(--bg); color: var(--txt); font: 16.5px/1.6 "Lexend", system-ui, sans-serif; }
 main { max-width: 760px; margin: 0 auto; padding: 20px 16px 60px; }
 h1 { font-size: 26px; margin: 8px 0 4px; }
 h2 { font-size: 20px; margin: 34px 0 10px; scroll-margin-top: 12px; }
@@ -30,7 +33,7 @@ a { color: var(--azul); }
 .panel { background: var(--card); border: 1px solid var(--borde); border-radius: 12px; padding: 14px 16px; margin: 12px 0; }
 .aviso { background: var(--aviso); border: 1px solid var(--aviso-b); border-radius: 10px; padding: 12px 16px; margin: 14px 0; }
 .indice a { display: block; padding: 3px 0; }
-.badge { display: inline-block; font-size: 12px; font-weight: 700; padding: 3px 9px; border-radius: 99px; white-space: nowrap; letter-spacing: .03em; }
+.badge { display: inline-block; font-size: 14px; font-weight: 700; padding: 3px 11px; border-radius: 99px; white-space: nowrap; }
 .b-comprar { background: var(--verde-bg); color: var(--verde); }
 .b-posible { background: var(--verde-bg); color: var(--verde); outline: 1.5px dashed var(--verde); }
 .b-cerca { background: var(--aviso); color: var(--txt); }
@@ -92,7 +95,7 @@ td, th { border-bottom: 1px solid var(--borde); padding: 6px 4px; text-align: le
       <dt>Stop</dt>
       <dd>El precio al que vendés si la cosa sale mal, para no perder más. <a href="#stop">Está explicado abajo.</a></dd>
       <dt>Objetivo</dt>
-      <dd>El precio al que vendés para quedarte con la ganancia. Algunas reglas no tienen objetivo fijo: venden cuando la página dice VENDER.</dd>
+      <dd>El precio al que vendés para quedarte con la ganancia. Algunas reglas no tienen objetivo fijo: venden cuando la página dice Vender.</dd>
       <dt>Capital</dt>
       <dd>Toda la plata que destinás a esto (no la que necesitás para vivir).</dd>
       <dt>Riesgo por operación</dt>
@@ -118,7 +121,7 @@ td, th { border-bottom: 1px solid var(--borde); padding: 6px 4px; text-align: le
     <li>Ponés la cantidad que compraste y el precio de stop que dice la tarjeta.</li>
     <li>Queda cargada: si el precio llega ahí, el broker vende solo, aunque no estés mirando.</li>
   </ol>
-  <p><b>Si tu broker no tiene orden de stop</b> (algunos argentinos no la tienen), entrá a la página todos los días: si aparece <span class="badge b-vender">VENDER YA</span>, vendé a mano ese día.</p>
+  <p><b>Si tu broker no tiene orden de stop</b> (algunos argentinos no la tienen), entrá a la página todos los días: si aparece <span class="badge b-vender">Vender ya</span>, vendé a mano ese día.</p>
   <h3>Las tres reglas del stop</h3>
   <ul>
     <li><b>Siempre</b> poné el stop el mismo día que comprás.</li>
@@ -128,26 +131,26 @@ td, th { border-bottom: 1px solid var(--borde); padding: 6px 4px; text-align: le
 
   <h2 id="carteles">4. Qué hacer con cada cartel</h2>
   <div class="panel carteles">
-    <span class="badge b-comprar">COMPRAR</span>
-    <div>Señal confirmada con el cierre. <b>Comprá en la apertura siguiente</b> el monto que dice "Cuánto comprar" y poné el stop.</div>
-    <span class="badge b-posible">POSIBLE COMPRA</span>
-    <div>Con el precio de ahora, la regla se activaría al cierre. <b>Todavía no compres.</b> Esperá a que la página diga COMPRAR (después de las 18:30) y comprá al otro día.</div>
-    <span class="badge b-cerca">CERCA</span>
+    <span class="badge b-comprar">Comprar</span>
+    <div>Señal confirmada con el cierre. <b>Comprá en la apertura siguiente</b> el monto que dice "Comprá" y poné el stop.</div>
+    <span class="badge b-posible">Posible compra</span>
+    <div>Con el precio de ahora, la regla se activaría al cierre. <b>Todavía no compres.</b> Esperá a que la página diga Comprar (después de las 18:30) y comprá al otro día.</div>
+    <span class="badge b-cerca">Cerca</span>
     <div>Le falta poco para dar señal. Solo para tener en el radar: <b>no compres</b>.</div>
-    <span class="badge b-comprar" style="background:var(--rojo-bg);color:var(--rojo)">NO COMPRAR</span>
+    <span class="badge b-comprar" style="background:var(--rojo-bg);color:var(--rojo)">NO Comprar</span>
     <div>Había señal de compra, pero el precio ya bajó hasta el stop. <b>No entres</b>.</div>
-    <span class="badge b-mantener">MANTENER</span>
-    <div>Si la compraste por esa señal, <b>no hagas nada</b>: dejá el stop puesto. Si no la compraste, <b>no entres ahora</b>: esperá una señal nueva de COMPRAR.</div>
-    <span class="badge b-posible-venta">POSIBLE VENTA</span>
-    <div>Si la tenés: con el precio de ahora, la regla diría vender al cierre. Esperá a la tarde: si queda en VENDER, vendé al otro día.</div>
-    <span class="badge b-vender">VENDER</span>
+    <span class="badge b-mantener">Mantener</span>
+    <div>Si la compraste por esa señal, <b>no hagas nada</b>: dejá el stop puesto. Si no la compraste, <b>no entres ahora</b>: esperá una señal nueva de Comprar.</div>
+    <span class="badge b-posible-venta">Posible venta</span>
+    <div>Si la tenés: con el precio de ahora, la regla diría vender al cierre. Esperá a la tarde: si queda en Vender, vendé al otro día.</div>
+    <span class="badge b-vender">Vender</span>
     <div>Si la tenés: <b>vendé en la apertura siguiente</b>. Se terminó esa operación (con ganancia o con pérdida).</div>
-    <span class="badge b-vender">VENDER YA</span>
+    <span class="badge b-vender">Vender ya</span>
     <div>El precio ya bajó al stop. Si tenías la orden de stop, ya se vendió sola. Si no, <b>vendé hoy</b>.</div>
-    <span class="badge b-vender">OBJETIVO</span>
+    <span class="badge b-vender">Llegó al objetivo</span>
     <div>Llegó al precio objetivo: <b>vendé y quedate con la ganancia</b>.</div>
   </div>
-  <p class="sub">Las cosas de VENDER / MANTENER solo te importan si compraste esa inversión <b>por esa misma señal</b>. Si no la tenés, ignoralas.</p>
+  <p class="sub">Lo de Vender y Mantener solo te importan si compraste esa inversión <b>por esa misma señal</b>. Si no la tenés, ignoralas.</p>
 
   <h2 id="paso-a-paso">5. Paso a paso de una operación</h2>
   <div class="panel ejemplo">
@@ -155,17 +158,17 @@ td, th { border-bottom: 1px solid var(--borde); padding: 6px 4px; text-align: le
   </div>
   <ol>
     <li><b>Una vez</b>: cargá arriba de la página tu capital y el riesgo (1%). Queda guardado en el celular.</li>
-    <li><b>Todos los días después de las 18:30</b>: entrá a la página y tocá el filtro <b>Comprar</b>.</li>
-    <li>Supongamos que aparece <span class="badge b-comprar">COMPRAR</span> en <b>CEDEAR Apple</b>: cerró en $27.500, stop $26.125 (−5%), "Cuánto comprar: <b>$100.000</b> · 3 u.", "Si sale bien: +$8.000", "Si sale mal: −$5.000".</li>
+    <li><b>Todos los días después de las 18:30</b>: entrá a la página. Arriba de todo dice en una frase si hay algo para comprar; las señales están en la sección <b>Para comprar</b>.</li>
+    <li>Supongamos que aparece <span class="badge b-comprar">Comprar</span> en <b>CEDEAR Apple</b>: cerró en $27.500, stop $26.125 (−5%), "Comprá: <b>$100.000</b> (3 unidades)", "Si sale bien: +$8.000", "Si sale mal: −$5.000".</li>
     <li><b>Al día siguiente, cuando abre la bolsa (11 h)</b>: en el broker comprás <b>3 CEDEARs de Apple</b>. El precio va a ser parecido a $27.500, no idéntico; está bien.</li>
     <li><b>En el mismo momento</b>: cargás la <a href="#stop">orden de stop</a> para vender 3 CEDEARs de Apple a <b>$26.125</b>.</li>
     <li><b>Anotalo</b> en un cuaderno o en las notas del celular: fecha, qué compraste, cuántos, a cuánto, stop, y con qué regla (dice en la tarjeta).</li>
-    <li><b>Los días siguientes</b>: la tarjeta va a decir <span class="badge b-mantener">MANTENER</span>. No hagas nada. Puede durar semanas o meses.</li>
+    <li><b>Los días siguientes</b>: va a aparecer en <b>Ya compradas por las reglas</b> con <span class="badge b-mantener">Mantener</span>. No hagas nada. Puede durar semanas o meses.</li>
     <li><b>Cuando termina</b> pasa una de estas tres cosas:
       <ul>
-        <li>Baja al stop → se vende sola (o vendés si ves <span class="badge b-vender">VENDER YA</span>). <span class="neg">Perdiste unos $5.000.</span> Normal.</li>
-        <li>Llega al objetivo → <span class="badge b-vender">OBJETIVO</span>, vendés. <span class="pos">Ganaste.</span></li>
-        <li>La regla dice salir → <span class="badge b-vender">VENDER</span>, vendés al otro día. Puede ser con ganancia o con pérdida chica.</li>
+        <li>Baja al stop → se vende sola (o vendés si ves <span class="badge b-vender">Vender ya</span>). <span class="neg">Perdiste unos $5.000.</span> Normal.</li>
+        <li>Llega al objetivo → <span class="badge b-vender">Llegó al objetivo</span>, vendés. <span class="pos">Ganaste.</span></li>
+        <li>La regla dice salir → <span class="badge b-vender">Vender</span>, vendés al otro día. Puede ser con ganancia o con pérdida chica.</li>
       </ul>
     </li>
     <li>Cuando vendés, <b>cancelá la orden de stop</b> que quedó cargada en el broker (si vendiste a mano).</li>
@@ -189,7 +192,7 @@ td, th { border-bottom: 1px solid var(--borde); padding: 6px 4px; text-align: le
     <li><b>Solo plata que no necesitás.</b> Nunca la de los gastos del mes ni los ahorros para una urgencia.</li>
     <li><b>Siempre con stop.</b> Sin excepciones.</li>
     <li><b>1% de riesgo por operación</b> (máximo 2%). Así, aunque salgan mal 10 seguidas, perdés alrededor del 10%.</li>
-    <li><b>Solo comprar con COMPRAR.</b> Ni con POSIBLE COMPRA, ni con CERCA, ni algo que esté en MANTENER.</li>
+    <li><b>Solo comprar con la señal Comprar.</b> Ni con Posible compra, ni con Cerca, ni algo que esté en Mantener.</li>
     <li><b>No te enamores.</b> Si la página dice vender, se vende, aunque "pinte" que va a subir.</li>
     <li><b>Esperar también es una decisión.</b> Puede haber semanas sin señales de compra. Es normal.</li>
     <li><b>Varias malas seguidas son normales.</b> No subas el monto para "recuperar".</li>
@@ -202,9 +205,9 @@ td, th { border-bottom: 1px solid var(--borde); padding: 6px 4px; text-align: le
   <h3>Si la regla "funciona", ¿por qué perdí?</h3>
   <p>Porque funciona <b>en el conjunto</b>, no en cada operación. Lo que importa es el resultado después de 15 o 20 operaciones, no de una.</p>
   <h3>¿Qué me conviene comprar: CEDEARs, acciones de EE.UU. o cripto?</h3>
-  <p>Para empezar, <b>CEDEARs y acciones argentinas</b>: se compran en pesos en cualquier broker argentino. Las acciones de EE.UU. directas necesitan una cuenta en el exterior. Las cripto se mueven mucho más: si querés probar, con poquito. Con el filtro <b>Mercado</b> elegís qué ver.</p>
+  <p>Para empezar, <b>CEDEARs y acciones argentinas</b>: se compran en pesos en cualquier broker argentino. Las acciones de EE.UU. directas necesitan una cuenta en el exterior. Las cripto se mueven mucho más: si querés probar, con poquito. Con "Filtrar por mercado o plazo" elegís qué ver.</p>
   <h3>Aparece la misma inversión dos veces, ¿compro dos veces?</h3>
-  <p>No. Si dos reglas dicen COMPRAR la misma inversión, comprá <b>una sola vez</b> (la de la regla con mejor historial) para no duplicar el riesgo.</p>
+  <p>No. Si dos reglas dicen Comprar la misma inversión, comprá <b>una sola vez</b> (la de la regla con mejor historial) para no duplicar el riesgo.</p>
   <h3>¿Cuánto voy a ganar?</h3>
   <p>No se puede saber. Cada tarjeta muestra cuánto dejó esa regla en el pasado, en promedio y en pesos con tu capital, pero el pasado no garantiza el futuro. Con capital chico las ganancias por operación también son chicas: subir el riesgo para ganar más es la forma más rápida de perder.</p>
   <h3>El precio al que compré es distinto al de la página, ¿está mal?</h3>

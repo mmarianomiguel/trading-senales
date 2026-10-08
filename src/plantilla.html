@@ -1,0 +1,491 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Señales de trading</title>
+<meta name="robots" content="noindex">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Señales">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --fondo: #f1f4f2; --papel: #ffffff; --tinta: #15201b; --gris: #5b6863; --linea: #dce3df; --suave: #e9eeeb;
+  --verde: #0e7a4d; --verde-bg: #e1f2e8; --ambar: #8f6200; --ambar-bg: #fff1d1;
+  --rojo: #b3362b; --rojo-bg: #fbe5e2; --azul: #2b5aa6; --azul-bg: #e4ecf9;
+  --grafico: #15201b; --media: #9aa7a1;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fondo: #101614; --papel: #18201d; --tinta: #e9efec; --gris: #9daaa4; --linea: #2a3531; --suave: #212b27;
+    --verde: #4fd39a; --verde-bg: #163429; --ambar: #f2c25b; --ambar-bg: #3a2f14;
+    --rojo: #ff8a7d; --rojo-bg: #3d1f1b; --azul: #8db1ff; --azul-bg: #1c2944;
+    --grafico: #e9efec; --media: #5d6b65;
+  }
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--fondo); color: var(--tinta); font: 16.5px/1.55 "Lexend", system-ui, sans-serif; }
+main { max-width: 1080px; margin: 0 auto; padding: 22px 16px 70px; }
+a { color: var(--azul); }
+:focus-visible { outline: 3px solid var(--azul); outline-offset: 2px; border-radius: 4px; }
+.num { font-variant-numeric: tabular-nums; }
+.pos { color: var(--verde); } .neg { color: var(--rojo); }
+.gris { color: var(--gris); }
+
+/* Encabezado */
+.cabeza h1 { font-size: 21px; margin: 0; letter-spacing: -.01em; }
+.cabeza p { margin: 2px 0 0; color: var(--gris); font-size: 15px; }
+.envivo { display: inline-flex; align-items: center; gap: 7px; }
+.envivo::before { content: ""; flex: none; width: 9px; height: 9px; border-radius: 50%; background: var(--verde); }
+.envivo.apagado::before { background: var(--media); }
+
+/* Veredicto del día: lo primero que se lee */
+.veredicto { margin: 18px 0 8px; padding: 22px 20px; border-radius: 18px; background: var(--papel); border: 1px solid var(--linea); }
+.veredicto.hay-compra { background: var(--verde-bg); border-color: transparent; }
+.veredicto h2 { font-size: clamp(28px, 7vw, 40px); line-height: 1.12; margin: 0 0 8px; letter-spacing: -.02em; max-width: 22ch; }
+.veredicto .resto { margin: 0; font-size: 18px; max-width: 60ch; }
+.capital { display: flex; flex-wrap: wrap; gap: 12px 18px; margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--linea); align-items: end; }
+.hay-compra .capital { border-color: rgba(14, 122, 77, .25); }
+.capital label { display: flex; flex-direction: column; gap: 4px; font-size: 15px; color: var(--gris); }
+.capital input { font: inherit; font-size: 20px; font-weight: 700; padding: 8px 12px; border: 1px solid var(--linea); border-radius: 10px; background: var(--papel); color: var(--tinta); width: 190px; max-width: 100%; }
+.capital #riesgo { width: 90px; }
+.capital .explica { flex: 1 1 260px; margin: 0; font-size: 15px; color: var(--gris); }
+.capital .explica b { color: var(--tinta); }
+.alerta { color: var(--rojo); font-weight: 700; }
+
+.guia { display: block; margin: 12px 0 0; font-size: 17px; font-weight: 700; }
+.prudencia { margin: 10px 0 0; font-size: 15px; color: var(--gris); max-width: 70ch; }
+
+.filtros { margin: 22px 0 0; }
+.filtros summary { cursor: pointer; color: var(--azul); font-weight: 700; font-size: 16px; }
+.filtros .cajon { display: flex; flex-wrap: wrap; gap: 14px 22px; margin-top: 12px; align-items: end; }
+.grupo { display: flex; flex-direction: column; gap: 5px; font-size: 14px; color: var(--gris); }
+.seg { display: inline-flex; flex-wrap: wrap; background: var(--suave); border-radius: 10px; padding: 3px; gap: 2px; }
+.seg button { font: inherit; font-size: 15px; border: 0; background: transparent; color: var(--gris); padding: 7px 12px; border-radius: 8px; cursor: pointer; }
+.seg button.on { background: var(--papel); color: var(--tinta); font-weight: 700; }
+.check { display: flex; gap: 8px; align-items: center; font-size: 15px; color: var(--gris); cursor: pointer; }
+
+/* Secciones por qué hacer */
+.seccion { margin-top: 38px; }
+.seccion > h2 { font-size: 24px; margin: 0; }
+.seccion > h2 .cuantas { margin-left: 6px; font-size: 16px; color: var(--gris); font-weight: 400; }
+.seccion > .que { margin: 4px 0 14px; color: var(--gris); max-width: 64ch; }
+.seccion .vacia { margin: 0; padding: 18px; border-radius: 14px; border: 1px dashed var(--linea); color: var(--gris); }
+.grilla { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(340px, 100%), 1fr)); gap: 14px; }
+
+/* Tarjeta de una señal */
+.senal { background: var(--papel); border: 1px solid var(--linea); border-left: 6px solid var(--color); border-radius: 14px; padding: 16px 16px 12px; display: flex; flex-direction: column; gap: 12px; }
+.t-comprar { --color: var(--verde); --color-bg: var(--verde-bg); }
+.t-vigilar { --color: var(--ambar); --color-bg: var(--ambar-bg); }
+.t-vender { --color: var(--rojo); --color-bg: var(--rojo-bg); }
+.t-tener { --color: var(--azul); --color-bg: var(--azul-bg); }
+.senal.floja { opacity: .72; }
+.senal header { display: flex; justify-content: space-between; gap: 10px; align-items: start; }
+.senal h3 { font-size: 20px; margin: 0; line-height: 1.2; }
+.senal .meta { margin: 3px 0 0; font-size: 14px; color: var(--gris); }
+.pill { font-size: 14px; font-weight: 700; padding: 4px 11px; border-radius: 99px; background: var(--color-bg); color: var(--color); white-space: nowrap; }
+.accion { margin: 0; padding: 12px 14px; border-radius: 10px; background: var(--color-bg); font-size: 17px; }
+.accion strong { display: block; font-size: 20px; color: var(--color); margin-bottom: 2px; }
+.numeros { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.numeros div { display: flex; flex-direction: column; min-width: 0; }
+.numeros small { font-size: 13px; color: var(--gris); }
+.numeros small a { color: inherit; }
+.numeros strong { font-size: 19px; line-height: 1.2; overflow-wrap: anywhere; }
+.numeros em { font-style: normal; font-size: 13px; }
+.plata { display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; margin: 0; padding: 12px 0 0; border-top: 1px solid var(--linea); font-size: 16px; }
+.plata dt { color: var(--tinta); }
+.plata dt small { display: block; font-size: 13px; color: var(--gris); }
+.plata dd { align-self: start; }
+.plata dd { margin: 0; text-align: right; font-weight: 700; }
+.plata .pide { grid-column: 1 / -1; color: var(--gris); font-size: 15px; }
+figure { margin: 0; }
+svg { width: 100%; height: 86px; display: block; }
+figcaption { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 13px; color: var(--gris); margin-top: 4px; }
+figcaption i { display: inline-block; width: 16px; height: 0; border-top: 2px solid var(--grafico); vertical-align: middle; margin-right: 5px; }
+figcaption i.m { border-top: 2px dashed var(--media); }
+figcaption i.s { border-top: 2px dashed var(--rojo); }
+figcaption i.c { width: 8px; height: 8px; border: 0; border-radius: 50%; background: var(--azul); }
+.senal details summary { cursor: pointer; color: var(--azul); font-size: 15px; }
+.senal details p { font-size: 15px; color: var(--gris); margin: 8px 0; }
+.senal details p b { color: var(--tinta); }
+.senal details table { width: 100%; font-size: 14px; border-collapse: collapse; }
+.senal details td, .senal details th { padding: 4px; border-bottom: 1px solid var(--linea); text-align: left; }
+.senal details th { color: var(--gris); font-weight: 400; }
+
+/* Ya comprados: filas compactas que se abren */
+.tenidas { display: flex; flex-direction: column; gap: 8px; }
+.tenida { background: var(--papel); border: 1px solid var(--linea); border-left: 6px solid var(--azul); border-radius: 12px; }
+.tenida > summary { list-style: none; cursor: pointer; padding: 12px 14px; display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; }
+.tenida > summary::-webkit-details-marker { display: none; }
+.tenida > summary b { font-size: 17px; }
+.tenida > summary .res { text-align: right; font-weight: 700; font-size: 17px; }
+.tenida > summary .gris { font-size: 14px; }
+.tenida[open] > summary { border-bottom: 1px solid var(--linea); }
+.tenida .senal { border: 0; border-radius: 0 0 12px 12px; }
+
+/* Final */
+.reglas { width: 100%; border-collapse: collapse; font-size: 15px; background: var(--papel); border-radius: 14px; overflow: hidden; }
+.reglas th, .reglas td { text-align: left; padding: 10px; border-bottom: 1px solid var(--linea); vertical-align: top; }
+.reglas th { color: var(--gris); font-weight: 400; font-size: 14px; }
+.reglas td small { display: block; color: var(--gris); font-size: 14px; margin-top: 2px; }
+.scroll { overflow-x: auto; }
+.letrachica { margin-top: 30px; font-size: 14px; color: var(--gris); max-width: 75ch; }
+</style>
+</head>
+<body>
+<main>
+  <div class="cabeza">
+    <h1>Señales de trading</h1>
+    <p id="cabecera"></p>
+    <p id="vivo-estado" class="envivo apagado">Buscando precios en vivo</p>
+  </div>
+
+  <section class="veredicto" id="veredicto">
+    <h2 id="titular"></h2>
+    <p class="resto" id="resto"></p>
+    <div class="capital">
+      <label>Tu plata para esto (en pesos)<input type="text" id="capital" inputmode="decimal" placeholder="Ej. 500.000"></label>
+      <label>Cuánto aceptás perder por operación (%)<input type="text" id="riesgo" inputmode="decimal"></label>
+      <p class="explica" id="explica-capital"></p>
+    </div>
+  </section>
+
+  <a class="guia" href="guia.html">¿Primera vez? Leé la guía: qué es el stop y qué hacer con cada señal</a>
+  <p class="prudencia">Esto es una ayuda, no un consejo de inversión: las reglas se probaron con años de historia, pero el pasado no garantiza nada. El primer mes, seguilas anotando y sin poner plata.</p>
+
+  <details class="filtros">
+    <summary>Filtrar por mercado o plazo</summary>
+    <div class="cajon">
+      <div class="grupo">Mercado<div class="seg" data-f="mercado"></div></div>
+      <div class="grupo">Plazo<div class="seg" data-f="plazo"></div></div>
+      <label class="check"><input type="checkbox" id="debiles"> Mostrar también las reglas que en esa inversión no funcionaron</label>
+    </div>
+  </details>
+
+  <section class="seccion" id="s-comprar">
+    <h2>Para comprar <span class="cuantas"></span></h2>
+    <p class="que">Comprá en la apertura del día siguiente a la señal y, en el mismo momento, poné el stop.</p>
+    <div class="grilla"></div>
+  </section>
+
+  <section class="seccion" id="s-vigilar">
+    <h2>Para vigilar <span class="cuantas"></span></h2>
+    <p class="que">Les falta poco para dar señal de compra. Todavía no compres: si se confirma, pasan a "Para comprar".</p>
+    <div class="grilla"></div>
+  </section>
+
+  <section class="seccion" id="s-vender">
+    <h2>Para vender, si las tenés <span class="cuantas"></span></h2>
+    <p class="que">Solo te importan si compraste esa inversión por esa misma señal. Si no la tenés, no hagas nada.</p>
+    <div class="grilla"></div>
+  </section>
+
+  <section class="seccion" id="s-tener">
+    <h2>Ya compradas por las reglas <span class="cuantas"></span></h2>
+    <p class="que">Si las compraste por esa señal, no hagas nada: dejá el stop puesto. Si no las tenés, no entres ahora; esperá una señal nueva. Tocá una para ver el detalle.</p>
+    <div class="tenidas"></div>
+  </section>
+
+  <section class="seccion">
+    <h2>Las reglas y cómo les fue</h2>
+    <p class="que">Sumando todas las inversiones, en los últimos años. Que una regla acierte menos de la mitad no es malo: gana porque cuando acierta, gana más de lo que pierde cuando falla.</p>
+    <div class="scroll"><table class="reglas" id="reglas"></table></div>
+  </section>
+
+  <p class="letrachica">Solo se muestran las reglas que en cada inversión ganaron más de lo que perdieron (al menos __MINOPS__ operaciones y ganancias de __MINPF__ veces las pérdidas o más). Las acciones argentinas y los CEDEARs se analizan pasados a dólar CCL para que la inflación no parezca suba; los precios se muestran en pesos. Precios en vivo: Binance y data912. <span id="errores"></span></p>
+</main>
+
+<script id="datos" type="application/json">__DATOS__</script>
+<script>
+const D = JSON.parse(document.getElementById("datos").textContent);
+const ACT = Object.fromEntries(D.activos.map(a => [a.ticker, a]));
+const EST = Object.fromEntries(D.estrategias.map(e => [e.id, e]));
+const MERCADOS = { cripto: "Cripto", eeuu: "Acción de EE.UU.", cedear: "CEDEAR", argentina: "Acción argentina" };
+const FILTROS = {
+  mercado: [["todos", "Todos"], ["cripto", "Cripto"], ["eeuu", "EE.UU."], ["cedear", "CEDEARs"], ["argentina", "Argentina"]],
+  plazo: [["todos", "Todos"], ["semanas", "Semanas"], ["meses", "Meses"]],
+};
+const f = { mercado: "todos", plazo: "todos", debiles: false };
+
+const guardado = (k, d) => { try { return localStorage.getItem(k) ?? d; } catch { return d; } };
+const guardar = (k, v) => { try { localStorage.setItem(k, v); } catch {} };
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+const pct = (v, signo = true) => (signo && v > 0 ? "+" : "") + (v * 100).toLocaleString("es-AR", { maximumFractionDigits: 1 }) + "%";
+const clase = v => v > 0 ? "pos" : v < 0 ? "neg" : "";
+const dec = v => v >= 1000 ? 0 : v >= 10 ? 2 : v >= 1 ? 3 : 4;
+const plata = (v, moneda) => (moneda === "ARS" ? "$ " : "US$ ") + v.toLocaleString("es-AR", { maximumFractionDigits: dec(Math.abs(v)) });
+const fecha = s => s.split("-").reverse().join("/");
+const numero = s => Number(String(s).replace(/\./g, "").replace(",", ".")) || 0;
+const plural = (n, uno, varios) => n === 1 ? uno : varios.replace("#", n);
+
+const ultimoCierre = D.activos.map(a => a.fecha).sort().at(-1);
+document.getElementById("cabecera").textContent =
+  "Con el cierre del " + new Date(ultimoCierre + "T12:00:00").toLocaleDateString("es-AR", { weekday: "long", day: "numeric", month: "long" }) +
+  ". Dólar CCL " + plata(D.ccl, "ARS") + ".";
+
+// ---- Capital y riesgo (quedan guardados en el celular) ----
+const capIn = document.getElementById("capital"), rieIn = document.getElementById("riesgo");
+function miles(v) { // 1234567,5 -> 1.234.567,5 mientras se escribe
+  v = String(v).replace(/[^\d,]/g, "");
+  const coma = v.indexOf(",");
+  const ent = (coma < 0 ? v : v.slice(0, coma)).replace(/^0+(?=\d)/, "").replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  return coma < 0 ? ent : (ent || "0") + "," + v.slice(coma + 1).replace(/,/g, "").slice(0, 2);
+}
+capIn.value = miles(guardado("capital", ""));
+rieIn.value = guardado("riesgo", String(D.riesgo * 100).replace(".", ","));
+capIn.oninput = () => { capIn.value = miles(capIn.value); guardar("capital", capIn.value); pintar(); };
+rieIn.oninput = () => { guardar("riesgo", rieIn.value); pintar(); };
+
+for (const el of document.querySelectorAll(".seg")) {
+  const k = el.dataset.f;
+  el.innerHTML = FILTROS[k].map(([v, t]) => '<button type="button" data-v="' + v + '">' + t + "</button>").join("");
+  el.onclick = e => { const b = e.target.closest("button"); if (!b) return; f[k] = b.dataset.v; pintar(); };
+}
+document.getElementById("debiles").onchange = e => { f.debiles = e.target.checked; pintar(); };
+
+// ---- Precios en vivo: Binance (cripto) y data912 (Argentina, CEDEARs, EE.UU.), cada 1 minuto ----
+// Las señales se confirman con el precio de CIERRE; el precio en vivo solo avisa qué está por pasar.
+const VIVO = {};
+let cclVivo = null, horaVivo = null;
+async function traerVivo() {
+  const pedir = u => fetch(u).then(r => r.ok ? r.json() : []).catch(() => []);
+  const cripto = D.activos.filter(a => a.vivo.fuente === "binance").map(a => a.vivo.simbolo);
+  const [bin, arg, ced, usa, adr] = await Promise.all([
+    pedir("https://api.binance.com/api/v3/ticker/24hr?symbols=" + encodeURIComponent(JSON.stringify(cripto))),
+    pedir("https://data912.com/live/arg_stocks"),
+    pedir("https://data912.com/live/arg_cedears"),
+    pedir("https://data912.com/live/usa_stocks"),
+    pedir("https://data912.com/live/usa_adrs"),
+  ]);
+  const M = { binance: new Map((Array.isArray(bin) ? bin : []).map(x => [x.symbol, { p: +x.lastPrice, var: +x.priceChangePercent / 100 }])) };
+  for (const [k, arr] of [["arg_stocks", arg], ["arg_cedears", ced], ["usa_stocks", usa]])
+    M[k] = new Map(arr.filter(x => x.c > 0).map(x => [x.symbol, { p: x.c, var: (x.pct_change || 0) / 100 }]));
+  const gg = M.arg_stocks.get("GGAL"), ggAdr = adr.find(x => x.symbol === "GGAL");
+  if (gg && ggAdr && ggAdr.c > 0) cclVivo = gg.p * 10 / ggAdr.c;
+  for (const a of D.activos) {
+    let v = M[a.vivo.fuente] && M[a.vivo.fuente].get(a.vivo.simbolo);
+    if (!v && a.vivo.factorCedear) {
+      const c = M.arg_cedears.get(a.vivo.simbolo);
+      if (c) v = { p: c.p * a.vivo.factorCedear, var: c.var, aprox: true };
+    }
+    if (v && v.p > 0) VIVO[a.ticker] = v;
+  }
+  if (Object.keys(VIVO).length) horaVivo = new Date();
+  pintar();
+}
+
+const cclAhora = () => cclVivo || D.ccl;
+const precioAhora = a => VIVO[a.ticker] ? VIVO[a.ticker].p : a.precio;
+const aPesos = (a, v) => a.moneda === "ARS" ? v : v * cclAhora();
+const enMoneda = (a, usd) => a.moneda === "ARS" ? usd * cclAhora() : usd; // los gatillos vienen en dólares (CCL para lo argentino)
+
+// Qué mostrar de cada regla, teniendo en cuenta el precio en vivo
+function vista(s) {
+  const a = ACT[s.ticker], v = VIVO[s.ticker], p = precioAhora(a);
+  const g = s.gatillo ? Object.assign({}, s.gatillo, { local: enMoneda(a, s.gatillo.precio) }) : null;
+  if (s.estado === "comprar") {
+    if (v && p <= a.precio * (1 - s.stopPct)) return { grupo: "comprar", tipo: "vender", pill: "No comprar", noComprar: true };
+    return { grupo: "comprar", tipo: "comprar", pill: "Comprar" };
+  }
+  if (s.estado === "vender") return { grupo: "vender", tipo: "vender", pill: "Vender" };
+  if (s.estado === "mantener") {
+    const stop = s.entradaPrecio * (1 - s.stopPct);
+    if (v && p <= stop) return { grupo: "vender", tipo: "vender", pill: "Vender ya", vivo: "stop" };
+    if (v && s.objetivoPct && p >= s.entradaPrecio * (1 + s.objetivoPct)) return { grupo: "vender", tipo: "vender", pill: "Llegó al objetivo", vivo: "objetivo" };
+    if (v && g && (g.dir === "abajo" ? p < g.local : p > g.local)) return { grupo: "vender", tipo: "vender", pill: "Posible venta", vivo: "venta", g };
+    return { grupo: "tener", tipo: "tener", pill: "Mantener", g };
+  }
+  if (s.estado === "nada" && v && g && g.tipo === "compra") {
+    if (p > g.local) return { grupo: "comprar", tipo: "comprar", pill: "Posible compra", vivo: "compra", g };
+    if (p > g.local * 0.97) return { grupo: "vigilar", tipo: "vigilar", pill: "Cerca", vivo: "cerca", g };
+  }
+  return null;
+}
+
+// Cuánto comprar (en pesos) para que, si toca el stop, se pierda solo el riesgo elegido; y qué puede dejar
+function cuanto(a, s, stopPct, objetivoPct, confirmada) {
+  const cap = numero(capIn.value), r = numero(rieIn.value) / 100;
+  if (!cap || !r) return '<dl class="plata"><dd class="pide">Poné arriba tu plata para esto y te calcula cuánto comprar y cuánto podés ganar o perder.</dd></dl>';
+  const monto = Math.min(cap, cap * r / stopPct);
+  const u = monto / aPesos(a, precioAhora(a));
+  const unidades = a.mercado === "cripto" ? u.toLocaleString("es-AR", { maximumFractionDigits: 5 }) : plural(Math.floor(u), "1 unidad", "# unidades");
+  const st = s.stats;
+  const bien = objetivoPct ? monto * objetivoPct : monto * st.promGanadora;
+  const fila = (titulo, nota, valor, cls) => "<dt>" + titulo + "<small>" + nota + "</small></dt><dd class='num " + (cls || "") + "'>" + valor + "</dd>";
+  return '<dl class="plata">' +
+    fila(confirmada ? "Comprá" : "Si se confirma, comprá", unidades + (a.moneda === "ARS" ? "" : ", ≈ " + plata(monto / cclAhora(), "USD")), plata(monto, "ARS")) +
+    fila("Si sale bien", objetivoPct ? "si llega al objetivo" : "promedio de las que ganaron", "+" + plata(bien, "ARS"), "pos") +
+    fila("Si sale mal", "si toca el stop", "−" + plata(monto * stopPct, "ARS"), "neg") +
+    "</dl>";
+}
+
+function grafico(a, stop, entrada) {
+  const g = a.grafico, W = 300, H = 86, P = 4;
+  const vals = [...g.c, ...g.m50.filter(v => v != null)];
+  if (stop) vals.push(stop);
+  const min = Math.min(...vals), max = Math.max(...vals);
+  const X = i => P + i * (W - 2 * P) / (g.c.length - 1);
+  const Y = v => H - P - (v - min) / (max - min || 1) * (H - 2 * P);
+  const linea = arr => arr.map((v, i) => v == null ? null : X(i).toFixed(1) + "," + Y(v).toFixed(1)).filter(Boolean).join(" ");
+  let s = '<svg viewBox="0 0 ' + W + " " + H + '" preserveAspectRatio="none" role="img" aria-label="Precio de los últimos 6 meses">';
+  s += '<polyline fill="none" stroke="var(--media)" stroke-width="1.4" stroke-dasharray="3 3" points="' + linea(g.m50) + '"/>';
+  s += '<polyline fill="none" stroke="var(--grafico)" stroke-width="1.8" points="' + linea(g.c) + '"/>';
+  if (stop) s += '<line x1="0" x2="' + W + '" y1="' + Y(stop) + '" y2="' + Y(stop) + '" stroke="var(--rojo)" stroke-width="1.4" stroke-dasharray="5 4"/>';
+  let compra = false;
+  if (entrada) { const i = g.f.indexOf(entrada.fecha); if (i >= 0) { compra = true; s += '<circle cx="' + X(i) + '" cy="' + Y(entrada.precio) + '" r="4" fill="var(--azul)"/>'; } }
+  return "<figure>" + s + "</svg><figcaption><span><i></i>Precio, últimos 6 meses</span><span><i class=m></i>Promedio de 50 días</span>" +
+    (stop ? "<span><i class=s></i>Stop</span>" : "") + (compra ? "<span><i class=c></i>Compra</span>" : "") + "</figcaption></figure>";
+}
+
+function numeros(a, celdas) {
+  return '<div class="numeros">' + celdas.map(c => "<div><small>" + c[0] + "</small><strong class=num>" + c[1] + "</strong><em" + (c[3] ? " class=" + c[3] : "") + ">" + (c[2] || "") + "</em></div>").join("") + "</div>";
+}
+const celdaAhora = a => {
+  const v = VIVO[a.ticker];
+  return v ? ["Ahora" + (v.aprox ? " (aprox.)" : ""), plata(v.p, a.moneda), pct(v.var) + " hoy", clase(v.var)] : ["Último cierre", plata(a.precio, a.moneda), "", ""];
+};
+const STOP = "<a href='guia.html#stop'>Stop</a>";
+
+function historial(s, a) {
+  const st = s.stats;
+  const filas = s.ultimas.map(t => "<tr><td>" + fecha(t.desde) + "</td><td>" + fecha(t.hasta) + '</td><td class="num ' + clase(t.r) + '">' + pct(t.r) + "</td><td>" + ({ regla: "por la regla", stop: "por el stop", objetivo: "en el objetivo" })[t.motivo] + "</td></tr>").join("");
+  return "<details><summary>Cómo le fue a esta regla con " + esc(a.nombre) + "</summary>" +
+    (s.probada ? "" : "<p><b>Ojo: en esta inversión esta regla no ganó en el pasado.</b></p>") +
+    "<p>En los últimos " + st.anios.toFixed(0) + " años dio <b>" + st.n + " operaciones</b>. Ganaron <b>" + Math.round(st.aciertos * st.n) + "</b> y perdieron <b>" + (st.n - Math.round(st.aciertos * st.n)) + "</b>. " +
+    "Cada una duró unos " + Math.round(st.dias) + " días y dejó en promedio <b class='" + clase(st.promedio) + "'>" + pct(st.promedio) + "</b>. " +
+    "La peor racha llegó a " + pct(-st.maxDD) + ". Comprar y no tocar habría dado " + pct(st.comprarYMantener) + " (con caídas más fuertes).</p>" +
+    (filas ? "<table><tr><th>Compra</th><th>Venta</th><th>Resultado</th><th>Salió</th></tr>" + filas + "</table>" : "") +
+    "</details>";
+}
+
+function tarjeta(s, vi) {
+  const a = ACT[s.ticker], e = EST[s.estrategia], p = precioAhora(a);
+  let accion = "", celdas = [], plataHtml = "", stop = null, entrada = null;
+
+  if (s.estado === "comprar") {
+    stop = a.precio * (1 - s.stopPct);
+    accion = vi.noComprar
+      ? "<strong>No compres</strong>Ya bajó hasta el stop antes de entrar."
+      : "<strong>Comprá en la apertura</strong>Del día siguiente a la señal. Cerró en " + plata(a.precio, a.moneda) + ".";
+    celdas = [celdaAhora(a), [STOP, plata(stop, a.moneda), pct(-s.stopPct), "neg"],
+      s.objetivoPct ? ["Objetivo", plata(a.precio * (1 + s.objetivoPct), a.moneda), pct(s.objetivoPct), "pos"] : ["Objetivo", "Sin fijo", "vende la regla", ""]];
+    if (!vi.noComprar) plataHtml = cuanto(a, s, s.stopPct, s.objetivoPct, true);
+  } else if (s.estado === "nada") {
+    const g = vi.g;
+    stop = p * (1 - g.stopPct);
+    accion = vi.vivo === "compra"
+      ? "<strong>Puede dar compra hoy</strong>Si cierra arriba de " + plata(g.local, a.moneda) + ", mañana se compra. Ahora está arriba. Esperá la confirmación de la tarde."
+      : "<strong>Le falta " + pct(g.local / p - 1, false) + "</strong>Tiene que cerrar arriba de " + plata(g.local, a.moneda) + " para dar compra. Todavía no compres.";
+    const obj = e.id === "rebote" ? ["Objetivo", plata(p * (1 + 2 * g.stopPct), a.moneda), "aprox. " + pct(2 * g.stopPct), "pos"] : ["Objetivo", "Sin fijo", "vende la regla", ""];
+    celdas = [celdaAhora(a), [STOP, plata(stop, a.moneda), "aprox. " + pct(-g.stopPct), "neg"], obj];
+    plataHtml = cuanto(a, s, g.stopPct, e.id === "rebote" ? 2 * g.stopPct : null, false);
+  } else {
+    entrada = { fecha: s.entradaFecha, precio: s.entradaPrecio };
+    stop = s.entradaPrecio * (1 - s.stopPct);
+    const res = s.estado === "mantener" ? p / s.entradaPrecio - 1 : s.resultado;
+    if (s.estado === "vender") {
+      accion = s.motivo === "regla" ? "<strong>Vendé en la apertura</strong>La regla dice salir."
+        : s.motivo === "stop" ? "<strong>Tocó el stop</strong>Si tenías la orden puesta, ya se vendió sola."
+        : "<strong>Llegó al objetivo</strong>Si tenías la orden puesta, ya se vendió.";
+    } else if (vi.vivo === "stop") accion = "<strong>Vendé ya</strong>Bajó al stop. Si tenías la orden puesta, ya se vendió sola.";
+    else if (vi.vivo === "objetivo") accion = "<strong>Vendé y cobrá</strong>Llegó al precio objetivo.";
+    else if (vi.vivo === "venta") accion = "<strong>Puede dar venta hoy</strong>Si cierra " + (vi.g.dir === "abajo" ? "abajo" : "arriba") + " de " + plata(vi.g.local, a.moneda) + ", mañana se vende. Esperá la confirmación de la tarde.";
+    else accion = "<strong>No hagas nada</strong>Dejá el stop puesto. " + esc(e.salidaTexto) +
+      (vi.g ? " Hoy sería con un cierre " + (vi.g.dir === "abajo" ? "abajo" : "arriba") + " de " + plata(vi.g.local, a.moneda) + "." : "");
+    const compra = ["Se compró el " + fecha(s.entradaFecha).slice(0, 5), plata(s.entradaPrecio, a.moneda), "", ""];
+    celdas = s.estado === "vender"
+      ? [compra, celdaAhora(a), ["Resultado", pct(res), "desde la compra", clase(res)]]
+      : [compra, celdaAhora(a), [STOP, plata(stop, a.moneda), "", "neg"]];
+    if (s.estado === "mantener" && !vi.vivo) accion = accion.replace("</strong>", "</strong>Va <b class='" + clase(res) + "'>" + pct(res) + "</b> desde la compra. ");
+  }
+
+  return '<article class="senal t-' + vi.tipo + (s.probada ? "" : " floja") + '">' +
+    "<header><div><h3>" + esc(a.nombre) + '</h3><p class="meta">' + MERCADOS[a.mercado] + ", regla " + esc(e.nombre).toLowerCase() + ", para " + e.plazo + '.</p></div><span class="pill">' + vi.pill + "</span></header>" +
+    '<p class="accion">' + accion + "</p>" +
+    numeros(a, celdas) +
+    plataHtml +
+    grafico(a, stop, entrada) +
+    historial(s, a) +
+    "</article>";
+}
+
+function filaTenida(s, vi) {
+  const a = ACT[s.ticker], res = precioAhora(a) / s.entradaPrecio - 1;
+  return '<details class="tenida"><summary><b>' + esc(a.nombre) + '</b><span class="res num ' + clase(res) + '">' + pct(res) + "</span>" +
+    '<span class="gris">' + esc(EST[s.estrategia].nombre) + ", desde el " + fecha(s.entradaFecha) + '</span><span class="gris num">stop ' + plata(s.entradaPrecio * (1 - s.stopPct), a.moneda) + "</span></summary>" +
+    tarjeta(s, vi) + "</details>";
+}
+
+function explicarCapital() {
+  const cap = numero(capIn.value), r = numero(rieIn.value) / 100;
+  const el = document.getElementById("explica-capital");
+  if (!cap || !r) { el.innerHTML = "Poné cuánta plata usás para esto y cuánto aceptás perder si una compra sale mal (recomendado: 1%)."; return; }
+  el.innerHTML = "Si una compra sale mal, perdés como mucho <b class=num>" + plata(cap * r, "ARS") + "</b>. Con eso se calcula cuánto comprar en cada señal." +
+    (r > 0.02 ? ' <span class="alerta">Más de 2% es mucho para empezar: unas pocas malas seguidas se llevan una buena parte.</span>' : "");
+}
+
+const ORDEN_PILL = { "Comprar": 0, "Posible compra": 1, "No comprar": 2, "Cerca": 0, "Vender ya": 0, "Llegó al objetivo": 1, "Vender": 2, "Posible venta": 3, "Mantener": 0 };
+function pintar() {
+  explicarCapital();
+  const ev = document.getElementById("vivo-estado");
+  ev.classList.toggle("apagado", !horaVivo);
+  ev.textContent = horaVivo
+    ? "Precios en vivo, actualizados a las " + horaVivo.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit", hour12: false }) + " h. Se refrescan solos cada minuto."
+    : "Buscando precios en vivo";
+  for (const el of document.querySelectorAll(".seg")) for (const b of el.children) b.classList.toggle("on", b.dataset.v === f[el.dataset.f]);
+
+  const lista = D.senales
+    .map(s => ({ s, vi: vista(s) }))
+    .filter(x => x.vi)
+    .filter(x => f.debiles || x.s.probada)
+    .filter(x => f.mercado === "todos" || ACT[x.s.ticker].mercado === f.mercado)
+    .filter(x => f.plazo === "todos" || EST[x.s.estrategia].plazo === f.plazo)
+    .sort((a, b) => ORDEN_PILL[a.vi.pill] - ORDEN_PILL[b.vi.pill] || b.s.stats.pf - a.s.stats.pf);
+  const de = g => lista.filter(x => x.vi.grupo === g);
+  const VACIAS = {
+    comprar: "Hoy no hay compras confirmadas. Es normal: las reglas esperan el momento justo, y esperar también es una decisión.",
+    vigilar: "Nada cerca de dar compra por ahora.",
+    vender: "Nada para vender.",
+    tener: "Ninguna.",
+  };
+  for (const g of ["comprar", "vigilar", "vender", "tener"]) {
+    const sec = document.getElementById("s-" + g), items = de(g);
+    sec.querySelector(".cuantas").textContent = items.length ? "(" + items.length + ")" : "";
+    const cont = sec.querySelector(g === "tener" ? ".tenidas" : ".grilla");
+    cont.innerHTML = items.length
+      ? items.map(x => g === "tener" ? filaTenida(x.s, x.vi) : tarjeta(x.s, x.vi)).join("")
+      : '<p class="vacia">' + VACIAS[g] + "</p>";
+  }
+
+  // El veredicto del día, en una frase
+  const confirmadas = de("comprar").filter(x => x.vi.pill === "Comprar").length;
+  const posibles = de("comprar").filter(x => x.vi.pill === "Posible compra").length;
+  const vigilar = de("vigilar").length, vender = de("vender").length;
+  const titular = confirmadas ? plural(confirmadas, "Hoy hay una inversión para comprar.", "Hoy hay # inversiones para comprar.")
+    : posibles ? plural(posibles, "Una puede dar compra al cierre de hoy.", "# pueden dar compra al cierre de hoy.")
+    : "Hoy no hay nada para comprar.";
+  const partes = [];
+  if (confirmadas && posibles) partes.push(plural(posibles, "otra que puede dar compra al cierre", "otras # que pueden dar compra al cierre"));
+  if (vigilar) partes.push(plural(vigilar, "una cerca de dar compra", "# cerca de dar compra"));
+  if (vender) partes.push(plural(vender, "una para vender, si la tenés", "# para vender, si las tenés"));
+  const resto = partes.length ? "Hay " + partes.slice(0, -1).join(", ") + (partes.length > 1 ? " y " : "") + partes.at(-1) + "." : "Nada que vender ni que vigilar.";
+  document.getElementById("titular").textContent = titular;
+  document.getElementById("resto").textContent = resto.charAt(0).toUpperCase() + resto.slice(1);
+  document.getElementById("veredicto").classList.toggle("hay-compra", confirmadas + posibles > 0);
+}
+
+document.getElementById("reglas").innerHTML =
+  "<tr><th>Regla</th><th>Plazo</th><th>Operaciones</th><th>Ganaron</th><th>Promedio por operación</th><th>Inversiones donde funciona</th></tr>" +
+  D.estrategias.map(e => "<tr><td><b>" + esc(e.nombre) + "</b><small>" + esc(e.explica) + "</small></td><td>" + e.plazo + "</td><td class=num>" + e.n +
+    "</td><td class=num>" + pct(e.aciertos, false) + '</td><td class="num ' + clase(e.promedio) + '">' + pct(e.promedio) + "</td><td class=num>" + e.probadas + " de " + D.activos.length + "</td></tr>").join("");
+
+if (D.errores.length) document.getElementById("errores").textContent = "Avisos: " + D.errores.join("; ");
+pintar();
+traerVivo();
+setInterval(traerVivo, 60000);
+</script>
+</body>
+</html>
