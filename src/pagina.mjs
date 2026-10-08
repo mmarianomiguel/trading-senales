@@ -38,13 +38,13 @@ h2 { font-size: 18px; margin: 32px 0 10px; }
 .panel { background: var(--card); border: 1px solid var(--borde); border-radius: 12px; padding: 14px; margin: 12px 0; }
 .fila { display: flex; flex-wrap: wrap; gap: 14px; align-items: end; }
 label.campo { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--sub); }
-input[type=text] { font: inherit; padding: 8px 10px; border: 1px solid var(--borde); border-radius: 8px; background: var(--bg); color: var(--txt); width: 170px; }
+input[type=text] { font: inherit; padding: 8px 10px; border: 1px solid var(--borde); border-radius: 8px; background: var(--bg); color: var(--txt); width: 170px; max-width: 100%; }
 .seg { display: inline-flex; flex-wrap: wrap; background: var(--gris-bg); border-radius: 9px; padding: 3px; gap: 2px; }
 .seg button { font: inherit; font-size: 13px; border: 0; background: transparent; color: var(--sub); padding: 6px 11px; border-radius: 7px; cursor: pointer; }
 .seg button.on { background: var(--card); color: var(--txt); box-shadow: 0 1px 2px rgba(0,0,0,.12); font-weight: 600; }
 .grupo { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--sub); }
 .check { display: flex; gap: 8px; align-items: center; font-size: 13px; color: var(--sub); cursor: pointer; }
-.grilla { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 12px; margin-top: 12px; }
+.grilla { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(330px, 100%), 1fr)); gap: 12px; margin-top: 12px; }
 .card { background: var(--card); border: 1px solid var(--borde); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 8px; }
 .card.debil { opacity: .7; }
 .cab { display: flex; justify-content: space-between; gap: 10px; align-items: start; }
@@ -139,7 +139,7 @@ const numero = s => Number(String(s).replace(/\\./g, "").replace(",", ".")) || 0
 
 document.getElementById("cabecera").textContent =
   "Datos al cierre del " + fecha(D.activos.map(a => a.fecha).sort().at(-1)) +
-  " · generado " + new Date(D.generado).toLocaleString("es-AR") +
+  " · generado " + new Date(D.generado).toLocaleString("es-AR", { timeZone: "America/Argentina/Buenos_Aires", dateStyle: "short", timeStyle: "short", hour12: false }) + " h" +
   " · dólar CCL " + plata(D.ccl, "ARS");
 
 const capIn = document.getElementById("capital"), rieIn = document.getElementById("riesgo");
