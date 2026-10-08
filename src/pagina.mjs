@@ -83,9 +83,9 @@ ol li, ul li { margin-bottom: 6px; }
 
   <div class="panel">
     <div class="fila">
-      <label class="campo">Capital total (en pesos)<input type="text" id="capital" inputmode="numeric" placeholder="ej. 1.000.000"></label>
+      <label class="campo">Capital total (en pesos)<input type="text" id="capital" inputmode="decimal" placeholder="ej. 1.000.000"></label>
       <label class="campo">Riesgo por operación (%)<input type="text" id="riesgo" inputmode="decimal"></label>
-      <div class="sub" style="max-width:420px">Con esto cada señal te dice cuánto comprar. El riesgo es lo máximo que perdés si toca el stop: con 1% y $1.000.000, perdés como mucho $10.000 por operación.</div>
+      <div class="sub" style="max-width:460px" id="explica-capital"></div>
     </div>
   </div>
 
@@ -146,9 +146,16 @@ document.getElementById("cabecera").textContent =
   " · dólar CCL " + plata(D.ccl, "ARS");
 
 const capIn = document.getElementById("capital"), rieIn = document.getElementById("riesgo");
-capIn.value = guardado("capital", "");
+// 1234567,5 -> 1.234.567,5 mientras se escribe (hasta 2 decimales)
+function miles(v) {
+  v = String(v).replace(/[^\\d,]/g, "");
+  const coma = v.indexOf(",");
+  const ent = (coma < 0 ? v : v.slice(0, coma)).replace(/^0+(?=\\d)/, "").replace(/\\B(?=(\\d{3})+(?!\\d))/g, ".");
+  return coma < 0 ? ent : (ent || "0") + "," + v.slice(coma + 1).replace(/,/g, "").slice(0, 2);
+}
+capIn.value = miles(guardado("capital", ""));
 rieIn.value = guardado("riesgo", String(D.riesgo * 100).replace(".", ","));
-capIn.oninput = () => { guardar("capital", capIn.value); pintar(); };
+capIn.oninput = () => { capIn.value = miles(capIn.value); guardar("capital", capIn.value); pintar(); };
 rieIn.oninput = () => { guardar("riesgo", rieIn.value); pintar(); };
 
 for (const el of document.querySelectorAll(".seg")) {
@@ -227,7 +234,22 @@ function tarjeta(s) {
 }
 
 const ORDEN = { comprar: 0, vender: 1, mantener: 2 };
+function explicarCapital() {
+  const cap = numero(capIn.value), r = numero(rieIn.value) / 100;
+  const el = document.getElementById("explica-capital");
+  if (!cap || !r) {
+    el.innerHTML = "Poné con cuánta plata operás y cuánto aceptás perder por operación. Con eso, cada señal de <b>COMPRAR</b> te dice cuánto comprar.";
+    return;
+  }
+  const hayCompras = D.senales.some(s => s.estado === "comprar" && s.probada);
+  el.innerHTML = "Con " + plata(cap, "ARS") + " y " + rieIn.value + "%, si una compra sale mal y toca el stop perdés como mucho <b>" + plata(cap * r, "ARS") +
+    "</b>. Por eso cada señal de <b>COMPRAR</b> te va a decir cuánto comprar (puede ser menos que todo tu capital)." +
+    (hayCompras ? "" : " Hoy no hay señales de compra, así que no hay nada que calcular todavía.") +
+    (r > 0.02 ? ' <b class="neg">Más de 2% por operación es mucho para empezar: con unas pocas seguidas que salgan mal perdés una buena parte.</b>' : "");
+}
+
 function pintar() {
+  explicarCapital();
   for (const el of document.querySelectorAll(".seg")) for (const b of el.children) b.classList.toggle("on", b.dataset.v === f[el.dataset.f]);
   const lista = D.senales
     .filter(s => s.estado !== "nada")
